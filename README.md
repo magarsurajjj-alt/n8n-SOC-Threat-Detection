@@ -4,7 +4,7 @@ An automated SOC (Security Operations Center) workflow built using **n8n** that 
 
 ---
 <img width="1365" height="684" alt="Screenshot 2026-05-17 044821" src="https://github.com/user-attachments/assets/a69db1c2-8840-45c8-81d8-921ef5c1689a" />
-----------------------
+
 # 🚀 Features
 
 * ✅ Webhook-based event ingestion
