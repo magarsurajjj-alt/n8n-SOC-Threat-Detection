@@ -129,15 +129,10 @@ n8n-soc-threat-detection/
 ├── workflow.json
 ├── README.md
 ├── LICENSE
-├── .gitignore
-│
 ├── screenshots/
 │   ├── workflow.png
 │   ├── critical-alert.png
 │   └── safe-alert.png
-│
-└── docs/
-    └── architecture.png
 ```
 
 ---
