@@ -1,0 +1,258 @@
+{
+  "name": "SOC Splunk Alert Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "splunk-alert",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -16,
+        48
+      ],
+      "id": "9effe14f-c772-49ef-97dd-17554982e4b5",
+      "name": "Webhook",
+      "webhookId": "59d051b8-03f3-4199-ab54-effc75452e0d"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      ip: $json.body.ip,\n      user: $json.body.user,\n      event: $json.body.event,\n      count: $json.body.count\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        48
+      ],
+      "id": "afa49325-688c-4d9d-80ec-643fe4e57ca7",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.virustotal.com/api/v3/ip_addresses/{{$json.ip}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-apikey",
+              "value": "###################################3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        400,
+        48
+      ],
+      "id": "4d820f46-166f-46c3-b7e6-5aea45336875",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const vt = $json.data?.attributes?.last_analysis_stats || {};\n\n// SCORE CALCULATION\nlet score = 0;\n\nif (vt.malicious > 0) score += 50;\nif (vt.suspicious > 0) score += 20;\n\n// optional Splunk logic\nif ($json.count && $json.count > 20) score += 20;\n\n// RETURN ONLY DATA (NO DECISION HERE)\nreturn [\n  {\n    ip: $json.ip,\n    user: $json.user,\n    event: $json.event,\n    count: $json.count,\n    score,\n    vt\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        48
+      ],
+      "id": "b524350f-51a3-4540-a5d1-aa966a25eced",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "sendTo": "yourname@gmail.com",
+        "subject": "🚨 CRITICAL SOC ALERT - Malicious IP Activity Detected",
+        "message": "=A HIGH-RISK security event has been detected by the automated SOC monitoring workflow.\n\n━━━━━━━━━━━━━━━━━━\n🔍 ALERT DETAILS\n━━━━━━━━━━━━━━━━━━\n\nIP Address: {{$json.ip}}\nUser: {{$json.user}}\nEvent Type: {{$json.event}}\nEvent Count: {{$json.count}}\n\n━━━━━━━━━━━━━━━━━━\n🧠 THREAT ANALYSIS\n━━━━━━━━━━━━━━━━━━\n\nRisk Score: {{$json.score}}\n\nVirusTotal Detection:\n• Malicious: {{$json.vt.malicious}}\n• Suspicious: {{$json.vt.suspicious}}\n• Harmless: {{$json.vt.harmless}}\n• Undetected: {{$json.vt.undetected}}\n\n━━━━━━━━━━━━━━━━━━\n🚨 STATUS\n━━━━━━━━━━━━━━━━━━\n\nClassification: CRITICAL THREAT\n\nRecommended Actions:\n• Investigate source IP immediately\n• Review related authentication logs\n• Check for lateral movement\n• Block IP if confirmed malicious\n• Escalate to incident response team\n\n━━━━━━━━━━━━━━━━━━\nGenerated Automatically by n8n SOC Automation Workflow",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        112,
+        448
+      ],
+      "id": "98eb9a2a-b021-48dd-8d75-844935d7c3f9",
+      "name": "Send a message",
+      "webhookId": "08276ac1-0d8f-48da-a3c4-e3268fef8380",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "LUlH0CKo9a1PDZ0O",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "yourname39@gmail.com",
+        "subject": "🟢 SAFE Activity Notification",
+        "message": "=A monitored event was analyzed by the SOC automation workflow.\n\n━━━━━━━━━━━━━━━━━━\n📋 EVENT DETAILS\n━━━━━━━━━━━━━━━━━━\n\nIP Address: {{$json.ip}}\nEvent Type: {{$json.event}}\nEvent Count: {{$json.count}}\n\n━━━━━━━━━━━━━━━━━━\n🧠 ANALYSIS RESULT\n━━━━━━━━━━━━━━━━━━\n\nRisk Score: {{$json.score}}\n\nVirusTotal Detection:\n• Malicious: {{$json.vt.malicious}}\n• Suspicious: {{$json.vt.suspicious}}\n• Harmless: {{$json.vt.harmless}}\n\n━━━━━━━━━━━━━━━━━━\n✅ STATUS\n━━━━━━━━━━━━━━━━━━\n\nClassification: SAFE\n\nNo immediate action is required at this time.\n\n━━━━━━━━━━━━━━━━━━\nGenerated Automatically by n8n SOC Automation Workflow",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        320
+      ],
+      "id": "88e0649d-fc54-47af-95a8-e4e6ea2e0c89",
+      "name": "Send a message3",
+      "webhookId": "52355fb3-cfe3-4276-84ee-7c4072ec77db",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "LUlH0CKo9a1PDZ0O",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.score}}",
+                    "rightValue": 70,
+                    "operator": {
+                      "type": "number",
+                      "operation": "lt"
+                    },
+                    "id": "9814b6fe-6a66-4e5e-a91c-fe9860ef047e"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "SAFE"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "abc672b6-165d-45f1-98ff-1d070f5fd788",
+                    "leftValue": "={{$json.score}}",
+                    "rightValue": "=70",
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CRITICAL"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        240
+      ],
+      "id": "449fcd8a-1230-44b8-a587-9e82d5dc074e",
+      "name": "Switch"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Send a message3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "30a7a8b1-0ce6-41e3-aadd-c6671ef3fb0b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "033a8d6a36f8a99113448710f4358da4ef7000caebd64cc2e5cc3ff561b0118b"
+  },
+  "id": "yzqb9RlXcobHUjjn",
+  "tags": []
+}
