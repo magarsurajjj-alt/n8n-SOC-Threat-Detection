@@ -112,11 +112,22 @@ Enable the workflow inside n8n.
 
 ### PowerShell
 
-```powershell
+```powershell for safe alert
 Invoke-WebRequest -Uri "http://localhost:5678/webhook-test/splunk-alert" `
 -Method POST `
 -Body '{"ip":"8.8.8.8","user":"test_user","event":"failed_login","count":30}' `
 -ContentType "application/json"
+```
+```powershell for critical alert
+Invoke-RestMethod -Method POST `
+  -Uri "http://localhost:5678/webhook-test/splunk-alert" `
+  -ContentType "application/json" `
+  -Body '{
+    "ip": "1.2.3.4",
+    "user": "attacker",
+    "event": "sql_injection_attempt",
+    "count": 200
+  }'
 ```
 
 ---
